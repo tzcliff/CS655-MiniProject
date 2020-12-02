@@ -54,4 +54,7 @@ class ImageRecognition():
         return result
 
 # Debug
-# print(ImageRecognition("../data/dog4.jpg").predict())
+for animal in ['cat', 'dog']:
+    for i in range(4):
+        print('This is a')
+        print(ImageRecognition("../data/' + animal + str(i+1) + '.jpg").predict())
