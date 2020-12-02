@@ -1,60 +1,61 @@
-import tensorflow as tf 
+import torch
+import torch.nn as nn
 import numpy as np
+import torch.nn.functional as F
+import requests
 
-from tensorflow.keras.applications.resnet50 import preprocess_input, ResNet50
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
-
-INPUT_SHAPE = (224, 224)
-MODEL_PATH = "model/softmax.h5"
+from torchvision.models import resnet50
+from torchvision import transforms
+from PIL import Image
+from torchvision.transforms.transforms import CenterCrop
 
 class ImageRecognition():
     def __init__(self, inputPath):
-        # Disable the GPU
-        tf.config.set_visible_devices([], 'GPU') 
+        self.preprocess = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean = [0.485, 0.456, 0.406],
+                std = [0.229, 0.224, 0.225]
+            )
+        ])
+
+        LABEL_JSON_URL = "https://s3.amazonaws.com/mlpipes/pytorch-quick-start/labels.json"
+        labelDict = requests.get(LABEL_JSON_URL).json()
+        self.labels = {int(k): v for k, v in labelDict.items()}
 
         self.model = self._getModel()
         self.input = self._loadImage(inputPath)
+        self.softmax = nn.Softmax(dim = 1)  
 
     def _loadImage(self, path):
-        img = load_img(path, 
-                       target_size = INPUT_SHAPE)
+        img = Image.open(path)
+        imgTensor = self.preprocess(img)
+        imgTensor.unsqueeze_(0)
 
-        imgArray = img_to_array(img)
-        imgArray = tf.expand_dims(imgArray, 0) # create a batch
-        imgArray = preprocess_input(imgArray)
-
-        return imgArray
+        return imgTensor
 
     def _getModel(self):
-        resnet50 = ResNet50()
-        dense = load_model(MODEL_PATH, compile = False)
-
-        model = Sequential([resnet50, dense])
-        for layer in model.layers:
-            layer.trainable = False
-
-        return model
+        return resnet50(pretrained = True).eval()
 
     def predict(self):
         """
         Predict the category (cat or dog) of the current image
         """
-        prediction = self.model.predict(self.input)
+        out = self.model(self.input)
+        pred = self.softmax(out)
 
-        idx = np.argmax(prediction, axis = 1)
-        category = ("Cat" if idx == 0 else "Dog")
+        idx = torch.argmax(pred, dim = 1).item()
+        category = self.labels[idx]
+        score = pred[0, idx]
 
-        result = "Predicted category: {}".format(category)
-
-        # Debug
-        # score = prediction[0, idx].item()
-        # result = "Predicted category: {}\nScore: {}".format(category, score)
+        result = "Top-1 predicted category: {} ({:.1f}%)".format(category, score * 100)
 
         return result
 
 # Debug
 for animal in ['cat', 'dog']:
     for i in range(4):
-        print('This is a')
-        print(ImageRecognition("../data/' + animal + str(i+1) + '.jpg").predict())
+        path = "../data/{}{}.jpg".format(animal, i + 1)
+        print(ImageRecognition(path).predict())
