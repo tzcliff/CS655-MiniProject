@@ -53,9 +53,3 @@ class ImageRecognition():
         result = "Top-1 predicted category: {} ({:.1f}%)".format(category, score * 100)
 
         return result
-
-# Debug
-for animal in ['cat', 'dog']:
-    for i in range(4):
-        path = "../data/{}{}.jpg".format(animal, i + 1)
-        print(ImageRecognition(path).predict())
