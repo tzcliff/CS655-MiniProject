@@ -40,7 +40,7 @@ Activate virtual environment, under `/users/rzjiang/BackendServer` - type comman
 . venv/bin/activate
 ```
 
-Turn on backend server - under `/users/rzjiang/BackendServer/webapp`, type command 
+Turn on backend server, under `/users/rzjiang/BackendServer/webapp`, type command 
 
 ```
 python3 backend.py
