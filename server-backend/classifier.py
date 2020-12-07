@@ -41,7 +41,7 @@ class ImageRecognition():
 
     def predict(self):
         """
-        Predict the category (cat or dog) of the current image
+        Predict the category of the current image
         """
         out = self.model(self.input)
         pred = self.softmax(out)
