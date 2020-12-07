@@ -34,7 +34,7 @@ SSH to server node using
 ssh username@pcvm1-40.geni.it.cornell.edu -p 22
 ```
 
-- Activate virtual environment: under `/users/rzjiang/BackendServer` - type command
+- Activate virtual environment: under `/users/rzjiang/BackendServer`, type command
 
 ```
 . venv/bin/activate
